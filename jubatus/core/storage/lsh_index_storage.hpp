@@ -121,9 +121,11 @@ class lsh_index_storage {
   void remove_model_row(const std::string& row);
   void set_mixed_row(const std::string& row, const lsh_entry& entry);
 
+  // Map of Row ID to LSH entry
   lsh_master_table_t master_table_;
   lsh_master_table_t master_table_diff_;
 
+  // Map of LSH hash to sorted list of Row ID Numbers
   lsh_table_t lsh_table_;
   lsh_table_t lsh_table_diff_;
 
