@@ -31,6 +31,10 @@ using std::numeric_limits;
 using std::string;
 using std::vector;
 
+#include <iostream>
+using namespace std;
+
+
 namespace jubatus {
 namespace core {
 namespace anomaly {
@@ -41,7 +45,13 @@ float calculate_lof(
     float lrd,
     const unordered_map<string, float>& neighbor_lrd) {
   if (neighbor_lrd.empty()) {
-    return lrd == 0 ? 1 : numeric_limits<float>::infinity();
+    if (lrd == 0) {
+      cout << "  => No neighbors, LRD is 0, score is 1" << endl;
+      return 1;
+    } else {
+      cout << "  => No neighbors, LRD is " << lrd << ", score is INF!!" << endl;
+      return numeric_limits<float>::infinity();
+    }
   }
 
   float sum_neighbor_lrd = 0;
@@ -50,7 +60,12 @@ float calculate_lof(
     sum_neighbor_lrd += it->second;
   }
 
+  cout << "  -> Num of Neighbors: " << neighbor_lrd.size() << endl;
+  cout << "  -> Sum Neighbor LRD: " << sum_neighbor_lrd << endl;
+  cout << "  -> Data Point LRD: " << lrd << endl;
+
   if (std::isinf(sum_neighbor_lrd) && std::isinf(lrd)) {
+    cout << "  => Both INF!! returning 1" << endl;
     return 1;
   }
 
@@ -85,18 +100,42 @@ lof::~lof() {
 }
 
 float lof::calc_anomaly_score(const common::sfv_t& query) const {
-  unordered_map<string, float> neighbor_lrd;
+  cout << "=================================" << endl;
+  cout << "CALC_ANOMALY_SCORE for SVF_T" << endl;
+  unordered_map<string, float> neighbor_lrds;
   const float lrd = mixable_storage_->get_model()->collect_lrds(
-      query, neighbor_lrd);
-  return calculate_lof(lrd, neighbor_lrd);
+      query, neighbor_lrds);
+  cout << "LRD for Given Point: " << lrd << endl;
+  cout << "Neighbor LRDs: " << endl;
+  for (unordered_map<string, float>::iterator it = neighbor_lrds.begin(); it != neighbor_lrds.end(); ++it) {
+    cout << "  " << it->first << " : " << it->second << endl;
+  }
+  float lof_value = calculate_lof(lrd, neighbor_lrds);
+
+  cout << "LOF Score: " << lof_value << endl;
+  cout << "=================================" << endl;
+
+  return lof_value;
 }
 
 float lof::calc_anomaly_score(const string& id) const {
-  unordered_map<string, float> neighbor_lrd;
+  cout << "=================================" << endl;
+  cout << "CALC_ANOMALY_SCORE for ID " << id << endl;
+  unordered_map<string, float> neighbor_lrds;
   const float lrd = mixable_storage_->get_model()->collect_lrds(
-      id, neighbor_lrd);
+      id, neighbor_lrds);
 
-  return calculate_lof(lrd, neighbor_lrd);
+  cout << "LRD for Given Point: " << lrd << endl;
+  cout << "Neighbor LRDs: " << endl;
+  for (unordered_map<string, float>::iterator it = neighbor_lrds.begin(); it != neighbor_lrds.end(); ++it) {
+    cout << "  " << it->first << " : " << it->second << endl;
+  }
+  float lof_value = calculate_lof(lrd, neighbor_lrds);
+
+  cout << "LOF Score: " << lof_value << endl;
+  cout << "=================================" << endl;
+
+  return lof_value;
 }
 
 void lof::clear() {
@@ -108,7 +147,10 @@ void lof::clear_row(const string& id) {
 }
 
 void lof::update_row(const string& id, const sfv_diff_t& diff) {
+  cout << "=================================" << endl;
+  cout << "UPDATE_ROW for ID " << id << endl;
   mixable_storage_->get_model()->update_row(id, diff);
+  cout << "=================================" << endl;
 }
 
 bool lof::set_row(const string& id, const common::sfv_t& sfv) {

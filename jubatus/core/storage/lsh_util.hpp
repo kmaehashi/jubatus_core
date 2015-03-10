@@ -48,7 +48,10 @@ class lsh_probe_generator {
 
   void next_perturbations();
 
+  // raw hash values for each hash table
   std::vector<std::vector<float> > hash_;
+
+  // LSH for each hash table
   std::vector<lsh_vector> base_;
   std::vector<std::vector<std::pair<float, int> > > perturbation_sets_;
   heap_type heap_;

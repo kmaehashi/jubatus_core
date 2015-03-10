@@ -30,6 +30,9 @@
 #include "../framework/mixable_versioned_table.hpp"
 #include "../nearest_neighbor/nearest_neighbor_base.hpp"
 
+#include <iostream>
+using namespace std;
+
 using jubatus::util::data::unordered_map;
 using jubatus::util::data::unordered_set;
 using jubatus::util::lang::shared_ptr;
@@ -59,13 +62,19 @@ shared_ptr<column_table> create_lof_table() {
 
 float calculate_lof(float lrd, const std::vector<float>& neighbor_lrds) {
   if (neighbor_lrds.empty()) {
+    cout << "  -> Neighbor LRDs are empty" << endl;
     return lrd == 0 ? 1 : std::numeric_limits<float>::infinity();
   }
 
   const float sum_neighbor_lrd = std::accumulate(
       neighbor_lrds.begin(), neighbor_lrds.end(), 0.0f);
 
+  cout << "  -> Num of Neighbors: " << neighbor_lrds.size() << endl;
+  cout << "  -> Sum Neighbor LRD: " << sum_neighbor_lrd << endl;
+  cout << "  -> Data Point LRD: " << lrd << endl;
+
   if (std::isinf(sum_neighbor_lrd) && std::isinf(lrd)) {
+    cout << "  BOTH INF!! returning 1" << endl;
     return 1;
   }
 
@@ -132,16 +141,34 @@ light_lof::~light_lof() {
 
 float light_lof::calc_anomaly_score(const common::sfv_t& query) const {
   std::vector<float> neighbor_lrds;
-  const float lrd = collect_lrds(query, neighbor_lrds);
 
-  return calculate_lof(lrd, neighbor_lrds);
+  cout << "=================================" << endl;
+  cout << "CALC_ANOMALY_SCORE for SVF_T" << endl;
+  const float lrd = collect_lrds(query, neighbor_lrds);
+  cout << "LRD for Given Point: " << lrd << endl;
+
+  float lof_value = calculate_lof(lrd, neighbor_lrds);
+
+  cout << "LOF Score: " << lof_value << endl;
+  cout << "=================================" << endl;
+
+  return lof_value;
 }
 
 float light_lof::calc_anomaly_score(const std::string& id) const {
   std::vector<float> neighbor_lrds;
-  const float lrd = collect_lrds(id, neighbor_lrds);
 
-  return calculate_lof(lrd, neighbor_lrds);
+  cout << "=================================" << endl;
+  cout << "CALC_ANOMALY_SCORE for ID " << id << endl;
+  const float lrd = collect_lrds(id, neighbor_lrds);
+  cout << "LRD for Given Point: " << lrd << endl;
+
+  float lof_value = calculate_lof(lrd, neighbor_lrds);
+
+  cout << "LOF Score: " << lof_value << endl;
+  cout << "=================================" << endl;
+
+  return lof_value;
 }
 
 void light_lof::clear() {
@@ -161,6 +188,9 @@ void light_lof::update_row(const std::string& id, const sfv_diff_t& diff) {
 }
 
 bool light_lof::set_row(const std::string& id, const common::sfv_t& sfv) {
+  cout << "=================================" << endl;
+  cout << "SET_ROW for ID " << id << endl;
+
   // Reject adding points that have the same fv for k times.
   // This helps avoiding LRD to become inf (so that LOF scores of its
   // neighbors won't go inf.)
@@ -174,6 +204,8 @@ bool light_lof::set_row(const std::string& id, const common::sfv_t& sfv) {
         sfv, nn_result, config_.nearest_neighbor_num - 1);
     if (nn_result.size() == (config_.nearest_neighbor_num - 1) &&
        (nn_result.back().second == 0)) {
+      cout << " => IGNORED because its kth same point" << endl;
+      cout << "=================================" << endl;
       return false;
     }
   }
@@ -182,6 +214,7 @@ bool light_lof::set_row(const std::string& id, const common::sfv_t& sfv) {
 
   shared_ptr<column_table> table = mixable_scores_->get_model();
   if (table->exact_match(id).first) {
+    cout << "ID already exists in table" << endl;
     collect_neighbors(id, update_set);
   }
 
@@ -195,6 +228,7 @@ bool light_lof::set_row(const std::string& id, const common::sfv_t& sfv) {
   update_set.insert(id);
   update_entries(update_set);
 
+  cout << "=================================" << endl;
   return true;
 }
 
@@ -252,7 +286,12 @@ float light_lof::collect_lrds(
   nearest_neighbor_engine_->neighbor_row(
       query, neighbors, config_.nearest_neighbor_num);
 
-  return collect_lrds_from_neighbors(neighbors, neighbor_lrds);
+  float lrd_for_query = collect_lrds_from_neighbors(neighbors, neighbor_lrds);
+  cout << "Collected LRD from Query (neighbors = " << neighbors.size() << ", collected LRDs = " << neighbor_lrds.size() << "):" << endl;
+  for (size_t i = 0; i < neighbor_lrds.size(); ++i) {
+    cout << "  [" << neighbors[i].first << " (" << neighbors[i].second << ")] => " << neighbor_lrds[i] << endl;
+  }
+  return lrd_for_query;
 }
 
 float light_lof::collect_lrds(
@@ -274,7 +313,12 @@ float light_lof::collect_lrds(
     neighbors.resize(config_.nearest_neighbor_num);
   }
 
-  return collect_lrds_from_neighbors(neighbors, neighbor_lrds);
+  float lrd_for_query = collect_lrds_from_neighbors(neighbors, neighbor_lrds);
+  cout << "Collected LRD from ID [" << id << "] (neighbors = " << neighbors.size() << ", collected LRDs = " << neighbor_lrds.size() << "):" << endl;
+  for (size_t i = 0; i < neighbor_lrds.size(); ++i) {
+    cout << "  [" << neighbors[i].first << " (" << neighbors[i].second << ")] => " << neighbor_lrds[i] << endl;
+  }
+  return lrd_for_query;
 }
 
 float light_lof::collect_lrds_from_neighbors(
@@ -360,6 +404,7 @@ void light_lof::update_entries(const unordered_set<std::string>& neighbors) {
     }
 
     kdist_column[*it] = nn_result.back().second;
+    cout << "UPDATE: kDist [" << *it << "] = " << nn_result.back().second << endl;
   }
 
   // Calculate LRDs of neighbors.
@@ -383,6 +428,7 @@ void light_lof::update_entries(const unordered_set<std::string>& neighbors) {
       }
     }
     lrd_column[*it] = lrd;
+    cout << "UPDATE: LRD [" << *it << "] = " << lrd << endl;
     table->update_clock(*it, owner);
   }
 }
