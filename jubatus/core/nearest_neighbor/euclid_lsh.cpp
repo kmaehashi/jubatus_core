@@ -21,10 +21,14 @@
 #include <vector>
 #include <utility>
 #include <cmath>
+#include <iostream>
 #include "jubatus/util/lang/cast.h"
 #include "../storage/fixed_size_heap.hpp"
 #include "../storage/column_table.hpp"
 #include "lsh_function.hpp"
+
+using std::cout;
+using std::endl;
 
 using std::map;
 using std::pair;
@@ -110,7 +114,11 @@ void euclid_lsh::neighbor_row(
 
   const bit_vector bv = lsh_column()[maybe_index.second];
   const float norm = norm_column()[maybe_index.second];
+
+  cout << "==================================" << endl;
+  cout << "NEIGHBOR_ROW(" << query_id << "):" << endl;
   neighbor_row_from_hash(bv, norm, ids, ret_num);
+  cout << "==================================" << endl;
 }
 
 void euclid_lsh::set_config(const config& conf) {
@@ -151,9 +159,13 @@ void euclid_lsh::neighbor_row_from_hash(
     const float denom = bv.bit_num();
     for (size_t i = 0; i < table->size(); ++i) {
       const size_t hamm_dist = bv.calc_hamming_distance(bv_col[i]);
+      cout << "  hamm_dist(" << table->get_key(i) << ") = " << hamm_dist << endl;
       const float theta = hamm_dist * M_PI / denom;
+      cout << "  theta(" << table->get_key(i) << ") = " << theta << endl;
       const float score =
           norm_col[i] * (norm_col[i] - 2 * norm * std::cos(theta));
+      cout << "  norm(" << table->get_key(i) << ") = " << norm_col[i] << endl;
+      cout << "  score(" << table->get_key(i) << ") = " << score << endl;
       heap.push(make_pair(score, i));
     }
   }
@@ -166,6 +178,7 @@ void euclid_lsh::neighbor_row_from_hash(
   for (size_t i = 0; i < sorted.size(); ++i) {
     ids.push_back(make_pair(table->get_key(sorted[i].second),
                             std::sqrt(squared_norm + sorted[i].first)));
+    cout << "  final_score(" << table->get_key(sorted[i].second) << ") = " << std::sqrt(squared_norm + sorted[i].first) << endl;
   }
 }
 

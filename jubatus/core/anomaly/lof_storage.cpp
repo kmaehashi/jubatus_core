@@ -24,6 +24,10 @@
 #include <utility>
 #include <vector>
 
+#include <iostream>
+using namespace std;
+
+
 #include "anomaly_type.hpp"
 #include "../common/exception.hpp"
 #include "../common/jsonconfig.hpp"
@@ -274,6 +278,7 @@ float lof_storage::collect_lrds_from_neighbors(
   float sum_reachability = 0;
   for (size_t i = 0; i < neighbors.size(); ++i) {
     sum_reachability += max(neighbors[i].second, get_kdist(neighbors[i].first));
+    cout << "    (" << neighbors[i].first << ": d = " << neighbors[i].second << ", kdist = " << get_kdist(neighbors[i].first) << ")" << endl;
   }
 
   // All the neighbors seem to have a same feature vector.
@@ -340,6 +345,7 @@ void lof_storage::update_kdist_with_neighbors(
     const string& row,
     const vector<pair<string, float> >& neighbors) {
   if (!neighbors.empty()) {
+    cout << "    (UPDATE KDIST: " << row << " => " << neighbors.back().second << ")" << endl;
     lof_table_diff_[row].kdist = neighbors.back().second;
   }
 }
@@ -360,6 +366,7 @@ void lof_storage::update_lrd_with_neighbors(
     const string& row, const vector<pair<string, float> >& neighbors) {
   if (neighbors.empty()) {
     lof_table_diff_[row].lrd = 1;
+    cout << "    (UPDATE LRD: " << row << " => 1)" << endl;
     return;
   }
 
@@ -371,10 +378,12 @@ void lof_storage::update_lrd_with_neighbors(
 
   if (sum_reachability == 0) {
     lof_table_diff_[row].lrd = numeric_limits<float>::infinity();
+    cout << "    (UPDATE LRD: " << row << " => " << lof_table_diff_[row].lrd << ")" << endl;
     return;
   }
 
   lof_table_diff_[row].lrd = length / sum_reachability;
+  cout << "    (UPDATE LRD: " << row << " => " << lof_table_diff_[row].lrd << ")" << endl;
 }
 
 }  // namespace anomaly
