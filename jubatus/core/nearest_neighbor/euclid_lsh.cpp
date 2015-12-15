@@ -163,7 +163,7 @@ void euclid_lsh::neighbor_row_from_hash(
       const float theta = hamm_dist * M_PI / denom;
       cout << "  theta(" << table->get_key(i) << ") = " << theta << endl;
       const float score =
-          norm_col[i] * (norm_col[i] - 2 * norm * std::cos(theta));
+          (norm * norm) + (norm_col[i] * norm_col[i]) - 2 * norm * norm_col[i] * std::cos(theta);
       cout << "  norm(" << table->get_key(i) << ") = " << norm_col[i] << endl;
       cout << "  score(" << table->get_key(i) << ") = " << score << endl;
       heap.push(make_pair(score, i));
@@ -174,11 +174,10 @@ void euclid_lsh::neighbor_row_from_hash(
   heap.get_sorted(sorted);
 
   ids.clear();
-  const float squared_norm = norm * norm;
   for (size_t i = 0; i < sorted.size(); ++i) {
     ids.push_back(make_pair(table->get_key(sorted[i].second),
-                            std::sqrt(squared_norm + sorted[i].first)));
-    cout << "  final_score(" << table->get_key(sorted[i].second) << ") = " << std::sqrt(squared_norm + sorted[i].first) << endl;
+                            std::sqrt(sorted[i].first)));
+    cout << "  final_score(" << table->get_key(sorted[i].second) << ") = " << std::sqrt(sorted[i].first) << endl;
   }
 }
 
