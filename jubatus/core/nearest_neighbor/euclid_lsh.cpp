@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include "jubatus/util/lang/cast.h"
@@ -176,8 +177,8 @@ void euclid_lsh::neighbor_row_from_hash(
   ids.clear();
   for (size_t i = 0; i < sorted.size(); ++i) {
     ids.push_back(make_pair(table->get_key(sorted[i].second),
-                            std::sqrt(sorted[i].first)));
-    cout << "  final_score(" << table->get_key(sorted[i].second) << ") = " << std::sqrt(sorted[i].first) << endl;
+                            std::sqrt(std::max(0.0f, sorted[i].first))));
+    cout << "  final_score(" << table->get_key(sorted[i].second) << ") = " << std::sqrt(std::max(0.0f, sorted[i].first)) << endl;
   }
 }
 
