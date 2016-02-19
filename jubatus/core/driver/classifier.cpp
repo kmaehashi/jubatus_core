@@ -20,10 +20,13 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <iostream>
+#include <sstream>
 
 #include "../classifier/classifier_factory.hpp"
 #include "../classifier/classifier_base.hpp"
 #include "../common/vector_util.hpp"
+#include "../common/type.hpp"
 #include "../fv_converter/datum.hpp"
 #include "../fv_converter/datum_to_fv_converter.hpp"
 #include "../fv_converter/converter_config.hpp"
@@ -59,6 +62,28 @@ void classifier::train(const string& label, const fv_converter::datum& data) {
   converter_->convert_and_update_weight(data, v);
   common::sort_and_merge(v);
   classifier_->train(v, label);
+}
+
+std::string dump_fv(const common::sfv_t& fv) {
+  std::stringstream s;
+  s << "{";
+  for (size_t i = 0; i < fv.size(); ++i) {
+    s << "\"" << fv[i].first << "\":" << fv[i].second;
+    if (i != fv.size() - 1) {
+      s << ",";
+    }
+  }
+  s << "}";
+  return s.str();
+}
+
+std::string classifier::train_and_dump(const string& label, const fv_converter::datum& data) {
+  common::sfv_t v;
+  converter_->convert_and_update_weight(data, v);
+  common::sort_and_merge(v);
+  classifier_->train(v, label);
+
+  return "{\"fv\": " + dump_fv(v) + ", \"model\": " + classifier_->dump() + "}";
 }
 
 jubatus::core::classifier::classify_result classifier::classify(

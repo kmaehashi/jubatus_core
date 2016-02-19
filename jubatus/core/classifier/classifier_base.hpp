@@ -61,6 +61,10 @@ class classifier_base {
   virtual void unpack(msgpack::object o) = 0;
   virtual void clear() = 0;
 
+  virtual std::string dump() const {
+    return "NA";
+  }
+
   virtual framework::mixable* get_mixable() = 0;
 };
 

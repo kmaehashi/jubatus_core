@@ -19,6 +19,7 @@
 #include <assert.h>
 #include <float.h>
 
+#include <sstream>
 #include <algorithm>
 #include <map>
 #include <queue>
@@ -210,6 +211,11 @@ float linear_classifier::squared_norm(const common::sfv_t& fv) {
 void linear_classifier::pack(framework::packer& pk) const {
   storage_->pack(pk);
 }
+
+std::string linear_classifier::dump() const {
+  return storage_->dump();
+}
+
 void linear_classifier::unpack(msgpack::object o) {
   storage_->unpack(o);
 }

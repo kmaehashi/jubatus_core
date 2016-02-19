@@ -112,6 +112,10 @@ class storage_base : public framework::model {
   virtual bool delete_label_nolock(const std::string& label) = 0;
 
   virtual std::string type() const = 0;
+
+  virtual std::string dump() const {
+    return "N/A";
+  };
 };
 
 }  // namespace storage

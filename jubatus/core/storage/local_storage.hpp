@@ -20,6 +20,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <sstream>
 #include "jubatus/util/data/unordered_map.h"
 #include "jubatus/util/concurrent/rwmutex.h"
 #include "jubatus/util/concurrent/lock.h"
@@ -105,6 +106,12 @@ class local_storage : public storage_base {
   }
   std::string type() const;
 
+  std::string dump() const {
+    std::stringstream s;
+    s << *this;
+    return s.str();
+  };
+
   MSGPACK_DEFINE(tbl_, class2id_);
 
  private:
@@ -116,27 +123,26 @@ class local_storage : public storage_base {
   // used for dump data
   friend std::ostream& operator<<(std::ostream& os, const local_storage& ls) {
     util::concurrent::scoped_rlock lk(ls.mutex_);
-    os << "{" << std::endl;
+    os << "{";
     for (id_features3_t::const_iterator it = ls.tbl_.begin();
          it != ls.tbl_.end();
          ++it) {
-      os << "  {" << it->first << ": " << "{" << std::endl;
+      os << "\"" << it->first << "\":" << "{";
       const id_feature_val3_t val = it->second;
       for (id_feature_val3_t::const_iterator jt = val.begin();
            jt != val.end();
            ++jt) {
-        os << "    " << ls.class2id_.get_key(jt->first) << ": " << jt->second;
+        os << "\"" << ls.class2id_.get_key(jt->first) << "\":" << jt->second;
 
         {
           id_feature_val3_t::const_iterator jt_next = jt;
           ++jt_next;
           if (jt_next != val.end()) {
-            os << ", ";
+            os << ",";
           }
         }
-        os << std::endl;
       }
-      os << "  }";
+      os << "}";
 
       {
         id_features3_t::const_iterator it_next = it;
@@ -145,7 +151,6 @@ class local_storage : public storage_base {
           os << ",";
         }
       }
-      os << std::endl;
     }
     os << "}";
     return os;

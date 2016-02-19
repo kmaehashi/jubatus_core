@@ -62,6 +62,8 @@ class linear_classifier : public classifier_base {
 
   virtual std::string name() const = 0;
 
+  virtual std::string dump() const;
+
   // TODO(beam2d): Think the objective of this function and where it should be
   // defined. Algorithms have |get_status| tentatively to extract status from
   // storages.
