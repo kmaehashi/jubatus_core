@@ -74,6 +74,7 @@ branches:
   only:
     - master
     - develop
+    - kazuki-travisci
 
 notifications:
   email: false
