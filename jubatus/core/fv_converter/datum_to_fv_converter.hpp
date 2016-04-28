@@ -39,7 +39,8 @@ enum frequency_weight_type {
 enum term_weight_type {
   TERM_BINARY,
   IDF,
-  WITH_WEIGHT_FILE
+  WITH_WEIGHT_FILE,
+  BM25
 };
 
 struct splitter_weight_type {

@@ -45,12 +45,14 @@ struct is_zero {
 
 keyword_weights::keyword_weights()
     : document_count_(),
+      total_document_length_(),
       document_frequencies_(),
       weights_() {
 }
 
 void keyword_weights::update_document_frequency(const sfv_t& fv) {
   ++document_count_;
+  total_document_length_ += fv.size();
   for (sfv_t::const_iterator it = fv.begin(); it != fv.end(); ++it) {
     ++document_frequencies_[it->first];
   }

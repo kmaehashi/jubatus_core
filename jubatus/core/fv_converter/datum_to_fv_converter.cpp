@@ -496,6 +496,8 @@ class datum_to_fv_converter_impl {
         return "idf";
       case WITH_WEIGHT_FILE:
         return "weight";
+      case BM25:
+        return "bm25";
       default:
         throw JUBATUS_EXCEPTION(
           jubatus::core::common::exception::runtime_error(

@@ -123,6 +123,11 @@ class weight_manager : public framework::model {
         master_weights_.get_document_count();
   }
 
+  uint64_t get_total_document_length() const {
+    return diff_weights_.get_total_document_length() +
+        master_weights_.get_total_document_length();
+  }
+
   size_t get_document_frequency(const std::string& key) const {
     return diff_weights_.get_document_frequency(key) +
         master_weights_.get_document_frequency(key);
@@ -133,7 +138,7 @@ class weight_manager : public framework::model {
         master_weights_.get_user_weight(key);
   }
 
-  double get_global_weight(const std::string& key) const;
+  double get_global_weight(const std::string& key, double value, size_t doc_length) const;
 
   mutable util::concurrent::mutex mutex_;
   storage::version version_;

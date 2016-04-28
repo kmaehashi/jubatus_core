@@ -77,13 +77,13 @@ void weight_manager::update_weight(const common::sfv_t& fv) {
 void weight_manager::get_weight(common::sfv_t& fv) const {
   scoped_lock lk(mutex_);
   for (common::sfv_t::iterator it = fv.begin(); it != fv.end(); ++it) {
-    double global_weight = get_global_weight(it->first);
+    double global_weight = get_global_weight(it->first, it->second, fv.size());
     it->second = static_cast<float>(it->second * global_weight);
   }
   fv.erase(remove_if(fv.begin(), fv.end(), is_zero()), fv.end());
 }
 
-double weight_manager::get_global_weight(const std::string& key) const {
+double weight_manager::get_global_weight(const std::string& key, double value, size_t doc_length) const {
   size_t p = key.find_last_of('/');
   if (p == std::string::npos) {
     return 1.0;
@@ -102,6 +102,21 @@ double weight_manager::get_global_weight(const std::string& key) const {
     } else {
       return get_user_weight(key.substr(0, p));
     }
+  } else if (type == "bm25") {
+    // Hyper parameters
+    double k1 = 1.2;
+    double b = 0.75;
+
+    double doc_count = get_document_count();
+    double average_doc_length = get_total_document_length() / doc_count;
+    double doc_freq = get_document_frequency(key);
+
+    double bm25_tf =
+        (value * (k1 + 1)) /
+        (value + k1 * (1 - b + b * (static_cast<double>(doc_length) / average_doc_length)));
+    double bm25_idf =
+        std::log((doc_count - doc_freq + 0.5) / (doc_freq + 0.5));
+    return bm25_tf * bm25_idf / value;
   } else {
     return 1;
   }
